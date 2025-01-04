@@ -1,0 +1,48 @@
+services:
+  app:
+    container_name: app
+    build: docker/web
+    environment:
+      - APP_TIMEOUT=60
+      - PHP_MEMORY_LIMIT=256M
+      - PHP_MAX_UPLOAD=20M
+    working_dir: /var/www/html
+    ports:
+      - "8080:80"
+      - "5173:5173"
+    networks:
+      - app_local
+    volumes:
+      - ./src:/var/www/html
+  db:
+    container_name: db
+    image: mariadb:latest
+    ports:
+     - 3306:3306
+    environment:
+      MYSQL_DATABASE: chat_app
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: root
+      TZ: 'Asia/Tokyo'
+    networks:
+      - app_local
+    volumes:
+      - ./docker/db/data:/var/lib/mysql
+      - ./docker/db/conf.d:/etc/mysql/conf.d
+  redis:
+    container_name: redis
+    image: redis:latest
+    volumes:
+      - ./docker/redis/data:/data
+    networks:
+      - app_local
+networks:
+  app_local:
+    name: app_local
+    driver: bridge
+    driver_opts:
+      com.docker.network.enable_ipv6: "false"
+volumes:
+  portal_db_volume:
+    driver: local

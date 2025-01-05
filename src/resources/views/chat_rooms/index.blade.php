@@ -26,8 +26,9 @@
             <p class="text-gray-500">作成日: {{ $chatRoom->created_at }}</p>
           </div>
           <div class="ml-auto">
-            <button class="sm:w-auto whitespace-nowrap py-3 px-2 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-pink-600 text-white hover:bg-pink-700 focus:outline-none focus:bg-pink-700 disabled:opacity-50 disabled:pointer-events-none">入室する</button>
-            <input type="submit" name="room" value="入室する" />
+            <form action="{{ route('show', ['chatRoom' => $chatRoom->id]) }}" method="GET">
+              <button class="sm:w-auto whitespace-nowrap py-3 px-2 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-pink-600 text-white hover:bg-pink-700 focus:outline-none focus:bg-pink-700 disabled:opacity-50 disabled:pointer-events-none" type="submit">入室する</button>
+            </form>
           </div>
         </div>
       </div>

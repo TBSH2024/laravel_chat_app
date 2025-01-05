@@ -4,10 +4,6 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <!-- チャットルームIDとメッセージルートをメタタグに埋め込む -->
-        <meta name="chat-room-id" content="{{ $chatRoom->id }}">
-        <meta name="messages-index-url" content="{{ route('messages.index', ['chatRoomId' => $chatRoom->id]) }}">
-
         <title>@yield('title', config('app.name', 'Laravel'))</title>
         <!-- Flowbite CDN -->
         <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />

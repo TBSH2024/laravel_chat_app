@@ -1,122 +1,107 @@
-// import './bootstrap';
+document.addEventListener('DOMContentLoaded', () => {
+  const chatRoomId = document.querySelector('meta[name="chat-room-id"]')?.content;
+  const messagesIndexUrl = document.querySelector('meta[name="messages-index-url"]')?.content;
+  const messageForm = document.getElementById('message-form');
+  const messagesDiv = document.getElementById('messages');
+  const actionUrl = document.querySelector('meta[name="message-store-url"]')?.content;
 
-// document.addEventListener('DOMContentLoaded', function() {
-//   const chatRoomId = document.querySelector('meta[name="chat-room-id"]').content; // チャットルームIDをmetaタグから取得
-//   const messagesIndexUrl = document.querySelector('meta[name="messages-index-url"]').content; // メッセージURLをmetaタグから取得
+  if (!chatRoomId || !messagesIndexUrl || !messageForm || !messagesDiv || !actionUrl) {
+      console.error("必要な要素またはデータが見つかりません。");
+      return;
+  }
 
-//   fetch(`/api/chatroom-info/${chatRoomId}`)
-//       .then(response => response.json())
-//       .then(data => {
-//           // 取得したデータを利用
-//           console.log(data.chatRoomId); // チャットルームID
-//           console.log(data.messagesIndexUrl); // メッセージ一覧URL
-//       })
-//       .catch(error => {
-//           console.error('Error fetching chatroom info:', error);
-//       });
-// });
+  messageForm.setAttribute('action', actionUrl);
 
-// // フラッシュメッセージを自動削除
-// document.addEventListener('DOMContentLoaded', () => {
-//   const flashMessage = document.querySelector('[role="alert"]');
-//   if (flashMessage) {
-//     setTimeout(() => {
-//       flashMessage.remove();
-//     }, 3000); // 3秒後に削除
-//   }
-// });
+  // メッセージ送信
+  messageForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
 
-// // メッセージの操作
-// document.getElementById('message-form').addEventListener('submit', async (event) => {
-//   event.preventDefault();
-//   const formData = new FormData(event.target);
+      const formData = new FormData(messageForm);
 
-//   const url = window.Laravel.route?.message?.store;
-//   const csrfToken = window.Laravel.csrfToken;
+      try {
+          const response = await fetch(actionUrl, {
+              method: 'POST',
+              headers: {
+                  'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+              },
+              body: formData
+          });
 
-//   if (!url || !csrfToken) {
-//     console.error("URL or CSRF token is missing.");
-//     return;
-//   }
+          if (!response.ok) {
+              throw new Error('メッセージ送信に失敗しました');
+          }
 
-//   try {
-//     const response = await fetch(url, {
-//       method: 'POST',
-//       headers: {
-//         'X-CSRF-TOKEN': csrfToken
-//       },
-//       body: formData
-//     });
+          const message = await response.json();
+          appendMessage(message, true); // messagesDivを渡さず、単純化
+          messageForm.reset();
+      } catch (error) {
+          console.error('メッセージ送信エラー:', error);
+      }
+  });
 
-//     if (response.ok) {
-//       const data = await response.json();
-//       // メッセージを表示
-//       const messagesDiv = document.getElementById('messages');
-//       const newMessage = document.createElement('div');
-//       newMessage.innerHTML = `<p>${data.nickname}</p><p>${data.message}</p>`;
-//       messagesDiv.appendChild(newMessage);
+  // メッセージ一覧をロード
+  async function loadMessages() {
+      try {
+          const response = await fetch(messagesIndexUrl);
+          if (!response.ok) {
+              throw new Error('メッセージの読み込みに失敗しました');
+          }
 
-//       // 送信したメッセージを削除
-//       document.getElementById('message').value = '';
-//       messagesDiv.scrollTop = messagesDiv.scrollHeight;
-//     } else {
-//       console.error('Failed to send message:', response.statusText);
-//     }
-//   } catch (e) {
-//     console.error(e);
-//     alert('エラーが発生しました');
-//   }
-// });
+          const messages = await response.json();
+          messagesDiv.innerHTML = ''; // メッセージエリアをクリア
 
-// // メッセージをロードする関数
-// async function loadMessages() {
-//   const url = window.Laravel.route?.messages?.index;
-//   const chatRoomId = window.Laravel.chatRoomId;
+          messages.forEach((message) => {
+              const isMyMessage = message.user_id === window.Laravel.currentUserId;
+              appendMessage(message, isMyMessage);
+          });
 
-//   if (!url || !chatRoomId) {
-//     console.error("URL or chatRoomId is missing.");
-//     return;
-//   }
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      } catch (error) {
+          console.error('メッセージ読み込みエラー:', error);
+      }
+  }
 
-//   try {
-//     const response = await fetch(`${url}/${chatRoomId}`);
+  // メッセージを表示する関数
+  function appendMessage(message, isMyMessage) {
+      const messageElement = document.createElement('div');
+      messageElement.classList.add('flex', isMyMessage ? 'justify-end' : 'justify-start');
 
-//     if (!response.ok) {
-//       throw new Error('Network response was not ok');
-//     }
+      const messageContent = document.createElement('div');
+      messageContent.classList.add(
+          isMyMessage ? 'bg-blue-200' : 'bg-gray-300', 
+          'text-black', 
+          'p-2', 
+          'rounded-lg', 
+          'w-1/2'
+      );
 
-//     const data = await response.json();
-//     const messageDiv = document.querySelector('#messages'); // メッセージ表示エリアを取得
-//     if (!messageDiv) {
-//       console.error('Message container not found');
-//       return;
-//     }
+      const nicknameElement = document.createElement('div');
+      nicknameElement.classList.add(isMyMessage ? 'text-right' : 'text-left');
+      nicknameElement.textContent = `ニックネーム: ${message.nickname}`;
 
-//     messageDiv.innerHTML = ''; // メッセージエリアをクリア
+      const messageTextElement = document.createElement('div');
+      messageTextElement.textContent = message.message;
 
-//     data.forEach(message => {
-//       const newMessage = document.createElement('div'); // メッセージ要素を作成
-//       newMessage.classList.add(message.nickname === '自分' ? 'my-message' : 'other-message'); // メッセージの表示位置を切り替え
+      const timestampElement = document.createElement('div');
+      timestampElement.classList.add('text-xs', 'text-gray-500', 'mt-1');
+      const date = new Date(message.created_at);
+      timestampElement.textContent = formatDate(date);
 
-//       // メッセージ内容を設定
-//       newMessage.innerHTML = `
-//         <div class="message-nickname">${message.nickname}</div>
-//         <div class="message-content">${message.content}</div>
-//       `;
+      messageContent.appendChild(nicknameElement);
+      messageContent.appendChild(messageTextElement);
+      messageContent.appendChild(timestampElement);
+      messageElement.appendChild(messageContent);
 
-//       // メッセージ要素を追加
-//       messageDiv.appendChild(newMessage);
-//     });
+      messagesDiv.appendChild(messageElement);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
 
-//     // メッセージエリアをスクロール
-//     messageDiv.scrollTop = messageDiv.scrollHeight;
-//   } catch (error) {
-//     console.error('Failed to load messages:', error);
-//   }
-// }
+  function formatDate(date) {
+      const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+      return date.toLocaleDateString('ja-JP', options);
+  }
 
-// // 初回ロード
-// loadMessages();
-
-// // 3秒ごとにメッセージを更新
-// setInterval(loadMessages, 3000);
+  // 初回メッセージロードと自動更新の設定
+  loadMessages();
+//   setInterval(loadMessages, 5000);
+});

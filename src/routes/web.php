@@ -14,11 +14,3 @@ Route::post('messages', [MessageController::class, 'store'])
 ->name('message.store');
 Route::get('messages/{chatRoomId}', [MessageController::class, 'index'])
 ->name('messages.index');
-
-
-Route::get('/api/chatroom-info/{chatRoom}', function ($chatRoom) {
-  return response()->json([
-      'chatRoomId' => $chatRoom->id,
-      'messagesIndexUrl' => route('messages.index', ['chatRoomId' => $chatRoom->id]),
-  ]);
-});

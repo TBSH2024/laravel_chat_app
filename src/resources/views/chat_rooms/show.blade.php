@@ -10,10 +10,15 @@
     <div class="bg-blue-500 p-4 text-white flex items-center">
         <h2 class="text-xl font-bold truncate max-w-xs">ルーム名: {{ $chatRoom->name }}</h2>
     </div>
-
+    <!-- メッセージ表示エリア -->
+    <div class="flex-1 overflow-y-auto p-4">
+        <div class="flex flex-col space-y-2" id="messages">
+            <!-- メッセージのサンプル -->
+        </div>
+    </div>
     <!-- 送信フォーム -->
-    <form action="{{ route('message.store') }}" method="POST" id="message-form" class="p-6 flex flex-col gap-4">
-    @csrf
+    <form action="{{ route('message.store') }}" method="POST" id="message-form" class="p-6 flex flex-col gap-4 bg-white border border-gray-300">
+        @csrf
         <input type="hidden" name="chat_room_id" value="{{ $chatRoom->id }}" />
         <div class="flex flex-col">
             <label for="nickname" class="text-gray-700 font-medium">ニックネーム</label>
@@ -25,22 +30,16 @@
         </div>
         <button type="submit" class="bg-blue-500 text-white py-2 px-6 rounded-lg hover:bg-blue-600 focus:outline-none">送信する</button>
     </form>
-
-    <!-- メッセージ表示エリア -->
-    <div class="flex-1 overflow-y-auto p-4" id="messages">
-        <div class="flex flex-col space-y-2">
-            <!-- メッセージのサンプル -->
-            <div class="flex justify-end">
-                <div class="bg-blue-200 text-black p-2 rounded-lg max-w-xs">
-                    Hey, how's your day going?
-                </div>
-            </div>
-            <div class="flex">
-                <div class="bg-gray-300 text-black p-2 rounded-lg max-w-xs">
-                    Not too bad, just a bit busy. How about you?
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
+<!-- 必要なmetaタグ -->
+<meta name="chat-room-id" content="{{ $chatRoom->id }}">
+<meta name="messages-index-url" content="{{ route('messages.index', $chatRoom->id) }}">
+<meta name="message-store-url" content="{{ route('message.store') }}">
+<!-- 現在のユーザーIDをJavaScriptに渡す -->
+<script>
+    window.Laravel = {
+        currentUserId: "{{ Auth::id() }}"
+    };
+</script>
+
 @endsection
